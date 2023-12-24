@@ -21,7 +21,7 @@ Using lazy.nvim:
     -- The locale for the content in the locale above to be translated into
     alternate_locale = 'zh',
   },
-  cmd = { 'GeminiDefine', 'GeminiDefineV', 'GeminiTranslate', 'GeminiAsk' },
+  event = 'VeryLazy',
 },
 ```
 

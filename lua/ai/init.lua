@@ -140,6 +140,17 @@ function M.translate(text)
   })
 end
 
+function M.improve(text)
+  local update = M.createPopup('Improving the content below:\n\n' .. text .. '\n\nAsking Gemini...')
+  local prompt = 'Improve the content below with the same locale. Do not return anything else. Here is the content:\n\n' .. vim.fn.json_encode(text)
+  M.askGemini(prompt, {
+    handleResult = function(result)
+      return 'Original content:\n\n' .. text .. '\n\nImprovements:\n\n' .. result
+    end,
+    callback = update,
+  })
+end
+
 function M.freeStyle(prompt)
   local update = M.createPopup('Asking Gemini...\n\n' .. prompt)
   M.askGemini(prompt, {
@@ -194,6 +205,20 @@ vim.api.nvim_create_user_command('GeminiTranslate', function(args)
     -- delayed so the popup won't be closed immediately
     vim.schedule(function()
       M.translate(text)
+    end)
+  end
+end, { range = true, nargs = '?' })
+
+vim.api.nvim_create_user_command('GeminiImprove', function(args)
+  local text = args['args']
+  if isEmpty(text) then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<esc>', true, false, true), 'n', false)
+    text = M.getSelectedText()
+  end
+  if hasLetters(text) then
+    -- delayed so the popup won't be closed immediately
+    vim.schedule(function()
+      M.improve(text)
     end)
   end
 end, { range = true, nargs = '?' })
