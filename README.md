@@ -20,6 +20,8 @@ Using lazy.nvim:
     locale = 'en',
     -- The locale for the content in the locale above to be translated into
     alternate_locale = 'zh',
+    -- Define custom prompts here, see below for more details
+    prompts = {},
   },
   event = 'VeryLazy',
 },
@@ -27,40 +29,76 @@ Using lazy.nvim:
 
 ## Usage
 
-### Define a word or phrase
+### Built-in Commands
 
 ```viml
 " Define the word under cursor
-:GeminiDefine
+:GeminiDefineCword
 
-" Define the specified word
+" Define the word or phrase selected or passed to the command
+:'<,'>GeminiDefine
 :GeminiDefine happy
-```
 
-Define the selected word or phrase:
-
-```viml
-:'<,'>GeminiDefineV
-```
-
-### Translate contents
-
-```viml
-" Translate selection
-:GeminiTranslate
-
-" Translate the specified content
+" Translate content selected or passed to the commmand
+:'<,'>GeminiTranslate
 :GeminiTranslate I am happy.
+
+" Improve content selected or passed to the command
+" Useful to correct grammar mistakes and make the expressions more native.
+:'<,'>GeminiImprove
+:GeminiTranslate Me is happy.
+
+" Ask anything
+:GeminiAsk Tell a joke.
 ```
 
-### Ask anything
+### Custom Prompts
+
+```lua
+opts = {
+  prompts = {
+    rock = {
+      -- Create a user command for this prompt
+      command = 'GeminiRock',
+      loading_tpl = 'Loading...',
+      prompt_tpl = 'Tell a joke',
+      result_tpl = 'Here is your joke:\n\n$output',
+      require_input = false,
+    },
+  },
+}
+```
+
+The prompts will be merged into built-in prompts. Here are the available fields for each prompt:
+
+| Fields          | Required | Description                                                                                      |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `command`       | No       | If defined, a user command will be created for this prompt.                                      |
+| `loading_tpl`   | No       | Template for content shown when communicating with Gemini. See below for available placeholders. |
+| `prompt_tpl`    | Yes      | Template for the prompt string passed to Gemini. See below for available placeholders.           |
+| `result_tpl`    | No       | Template for the result shown in the popup. See below for available placeholders.                |
+| `require_input` | No       | If set to `true`, the prompt will only be sent if text is selected or passed to the command.     |
+
+Placeholders can be used in templates. If not available, it will be left as is.
+
+| Placeholders          | Description                                                                                | Availability      |
+| --------------------- | ------------------------------------------------------------------------------------------ | ----------------- |
+| `${locale}`           | `opts.locale`                                                                              | Always            |
+| `${alternate_locale}` | `opts.alternate_locale`                                                                    | Always            |
+| `${input}`            | The text selected or passed to the command.                                                | Always            |
+| `${input_encoded}`    | The text encoded with JSON so that Gemini will take it as literal instead of a new prompt. | Always            |
+| `${output}`           | The result returned by Gemini.                                                             | After the request |
+
+We can either call a prompt with the associated command:
 
 ```viml
-" Use selection as the prompt
-:GeminiAsk
+:GeminiRock
+```
 
-" Pass prompt explicitly
-:GeminiAsk How to add two numbers in TypeScript?
+or with its name:
+
+```viml
+:lua require('ai').handle('rock')
 ```
 
 ## Related Projects
