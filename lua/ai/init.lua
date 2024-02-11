@@ -80,8 +80,13 @@ function M.getSelectedText(esc)
   end
   local vstart = vim.fn.getpos("'<")
   local vend = vim.fn.getpos("'>")
-  local lines = vim.api.nvim_buf_get_text(0, vstart[2] - 1, vstart[3] - 1, vend[2] - 1, vend[3], {})
-  if lines ~= nil then
+  -- If the selection has been made under VISUAL mode:
+  local ok, lines = pcall(vim.api.nvim_buf_get_text, 0, vstart[2] - 1, vstart[3] - 1, vend[2] - 1, vend[3], {})
+  if ok then
+    return joinLines(lines)
+  else
+    -- If the selection has been made under VISUAL LINE mode:
+    lines = vim.api.nvim_buf_get_lines(0, vstart[2] - 1, vend[2], false)
     return joinLines(lines)
   end
 end
