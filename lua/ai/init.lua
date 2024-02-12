@@ -38,6 +38,7 @@ M.opts = {
   api_key = '',
   locale = 'en',
   alternate_locale = 'zh',
+  result_popup_gets_focus = false,
 }
 M.prompts = default_prompts
 local win_id
@@ -162,8 +163,9 @@ function M.createPopup(initialContent, width, height)
   })
   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown')
   update(initialContent)
-  -- Give the focus to the popup window.
-  vim.api.nvim_set_current_win(win_id)
+  if M.opts.result_popup_gets_focus then
+    vim.api.nvim_set_current_win(win_id)
+  end
   return update
 end
 

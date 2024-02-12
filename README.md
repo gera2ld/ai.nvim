@@ -21,6 +21,10 @@ Using lazy.nvim:
     -- The locale for the content in the locale above to be translated into
     alternate_locale = 'zh',
     -- Define custom prompts here, see below for more details
+    result_popup_get_focus = false,
+    -- Gemini's answer is displayed in a popup buffer
+    -- Default behaviour is not to give it the focus because it is seen as a kind of tooltip
+    -- But if you prefer it to get the focus, set to true.
     prompts = {},
   },
   event = 'VeryLazy',
