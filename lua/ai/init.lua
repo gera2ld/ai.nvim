@@ -104,7 +104,7 @@ function M.formatResult(data)
   local candidates_number = #data['candidates']
   if candidates_number == 1 then
     if data['candidates'][1]['content'] == nil then
-      result = 'Gemini stoped with the reason:' .. data['candidates'][1]['stopReason'] .. '\n'
+      result = 'Gemini stoped with the reason:' .. data['candidates'][1]['finishReason'] .. '\n'
       return result
     else
       result = '# There is only 1 candidate\n'
