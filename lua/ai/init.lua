@@ -134,7 +134,8 @@ function M.askGemini(prompt, opts)
     })
 end
 
-function M.createPopup(initialContent)
+
+function M.createPopup(initialContent, width, height)
   M.close()
 
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -154,13 +155,15 @@ function M.createPopup(initialContent)
     border = 'single',
     title = 'ai.nvim',
     style = 'minimal',
-    width = 60,
-    height = 20,
+    width = width,
+    height = height,
     row = 1,
     col = 0,
   })
-
+  vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown')
   update(initialContent)
+  -- Give the focus to the popup window.
+  vim.api.nvim_set_current_win(win_id)
   return update
 end
 
@@ -177,13 +180,15 @@ end
 
 function M.handle(name, input)
   local def = M.prompts[name]
+  local width = vim.fn.winwidth(0)
+  local height = vim.fn.winheight(0)
   local args = {
     locale = M.opts.locale,
     alternate_locale = M.opts.alternate_locale,
     input = input,
     input_encoded = vim.fn.json_encode(input),
   }
-  local update = M.createPopup(M.fill(def.loading_tpl, args))
+  local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
   local prompt = M.fill(def.prompt_tpl, args)
   M.askGemini(prompt, {
     handleResult = function(output)
