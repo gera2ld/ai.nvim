@@ -37,7 +37,7 @@ local default_prompts = {
 local M = {}
 M.opts = {
   gemini_api_key = '',
-  chargpt_api_key = '',
+  chatgpt_api_key = '',
   locale = 'en',
   alternate_locale = 'zh',
   result_popup_gets_focus = false,
@@ -178,7 +178,7 @@ function M.handle(name, input)
             end,
             callback = update,
           },
-          M.opts.chargpt_api_key
+          M.opts.chatgpt_api_key
         )
       end,
       callback = update,
