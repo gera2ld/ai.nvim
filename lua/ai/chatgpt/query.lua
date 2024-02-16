@@ -17,7 +17,7 @@ function query.askChatGPTCallback(res, prompt, opts)
     end
   else
     local data = vim.fn.json_decode(res.body)
-    result = query.formatChatGPTResult(data)
+    result = query.formatChatGPTResult(res.body)
     if opts.handleResult ~= nil then
       result = opts.handleResult(result)
     end
