@@ -1,4 +1,4 @@
-local gemini = require('gemini.query')
+local gemini = require('ai.gemini.query')
 
 local default_prompts = {
   define = {
