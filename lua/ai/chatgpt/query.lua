@@ -26,7 +26,7 @@ function query.askChatGPTCallback(res, prompt, opts)
 end
 
 function query.askChatGPT(prompt, opts, api_key)
-  curl.post('https://eo5twtqi2b9wf8f.m.pipedream.net',
+  curl.post('https://api.openai.com/v1/chat/completions',
     {
       raw = {
         { '-H', 'Content-type: application/json' },
