@@ -1,14 +1,9 @@
 local curl = require('plenary.curl')
 local query = {}
 
-
--- Explain this function with inline comments
---
 function query.formatChatGPTResult(data)
   local result = 'Error: Unknown error'
-
   result = data.choices[1].message.content
-
   return result
 end
 
@@ -44,7 +39,7 @@ function query.askChatGPT(prompt, opts, api_key)
               { role = 'user', content = prompt}},
             temperature = 0.7
           }
-      ), 
+      ),
       callback = function(res)
         vim.schedule(function() query.askChatGPTCallback(res, prompt, opts) end)
       end
