@@ -150,43 +150,81 @@ function M.fill(tpl, args)
   return tpl
 end
 
+-- function M.handle(name, input)
+--   local def = M.prompts[name]
+--   local width = vim.fn.winwidth(0)
+--   local height = vim.fn.winheight(0)
+--   local args = {
+--     locale = M.opts.locale,
+--     alternate_locale = M.opts.alternate_locale,
+--     input = input,
+--     input_encoded = vim.fn.json_encode(input),
+--   }
+--   local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
+--   local prompt = M.fill(def.prompt_tpl, args)
+-- 
+--   gemini.askGemini(
+--     prompt,
+--     {
+--       handleResult = function(gemini_output)
+--         args.gemini_output = gemini_output
+--         chatgpt.askChatGPT(
+--           prompt,
+--           {
+--             handleResult = function(chatgpt_output)
+--               args.chatgpt_output = chatgpt_output
+--               args.output = args.gemini_output .. args.chatgpt_output
+--               return M.fill(def.result_tpl or '${output}', args)
+--             end,
+--             callback = update,
+--           },
+--           M.opts.chatgpt_api_key
+--         )
+--       end,
+--       callback = update,
+--     },
+--     M.opts.gemini_api_key
+--   )
+-- end
+
 function M.handle(name, input)
   local def = M.prompts[name]
-  local width = vim.fn.winwidth(0)
-  local height = vim.fn.winheight(0)
+  local width, height = vim.fn.winwidth(0), vim.fn.winheight(0)
   local args = {
     locale = M.opts.locale,
     alternate_locale = M.opts.alternate_locale,
     input = input,
     input_encoded = vim.fn.json_encode(input),
   }
+
   local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
   local prompt = M.fill(def.prompt_tpl, args)
+
+  -- Function to handle both gemini and chatgpt results
+  local function handleResult(output, output_key)
+    args[output_key] = output
+    args.output = (args.gemini_output or '') .. (args.chatgpt_output or '')
+    return M.fill(def.result_tpl or '${output}', args)
+  end
 
   gemini.askGemini(
     prompt,
     {
-      handleResult = function(gemini_output)
-        args.gemini_output = gemini_output
-        chatgpt.askChatGPT(
-          prompt,
-          {
-            handleResult = function(chatgpt_output)
-              args.chatgpt_output = chatgpt_output
-              args.output = args.gemini_output .. args.chatgpt_output
-              return M.fill(def.result_tpl or '${output}', args)
-            end,
-            callback = update,
-          },
-          M.opts.chatgpt_api_key
-        )
-      end,
-      callback = update,
+      handleResult = function(gemini_output) return handleResult(gemini_output, 'gemini_output') end,
+      callback = update
     },
     M.opts.gemini_api_key
   )
-end
 
+  chatgpt.askChatGPT(
+    prompt,
+    {
+      handleResult = function(chatgpt_output) return handleResult(chatgpt_output, 'chatgpt_output') end,
+      callback = update
+    },
+    M.opts.chatgpt_api_key
+  )
+end
 
 function M.assign(table, other)
   for k, v in pairs(other) do
