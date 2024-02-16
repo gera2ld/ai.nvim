@@ -6,7 +6,7 @@ local default_prompts = {
     command = 'GeminiDefine',
     loading_tpl = 'Define:\n\n${input}\n\nAsking Gemini...',
     prompt_tpl =
-      'Define the content below in locale ${locale}. The output is a bullet list of definitions grouped by parts of speech in plain text. Each item of the definition list contains pronunciation using IPA, meaning, and a list of usage examples with at most 2 items. Do not return anything else. Here is the content:\n\n${input_encoded}',
+    'Define the content below in locale ${locale}. The output is a bullet list of definitions grouped by parts of speech in plain text. Each item of the definition list contains pronunciation using IPA, meaning, and a list of usage examples with at most 2 items. Do not return anything else. Here is the content:\n\n${input_encoded}',
     result_tpl = 'Original Content:\n\n${input}\n\nDefinition:\n\n${output}',
     require_input = true,
   },
@@ -14,7 +14,7 @@ local default_prompts = {
     command = 'GeminiTranslate',
     loading_tpl = 'Translating the content below:\n\n${input}\n\nAsking Gemini...',
     prompt_tpl =
-      'Translate the content below into locale ${locale}. Translate into ${alternate_locale} instead if it is already in ${locale}. Do not return anything else. Here is the content:\n\n${input_encoded}',
+    'Translate the content below into locale ${locale}. Translate into ${alternate_locale} instead if it is already in ${locale}. Do not return anything else. Here is the content:\n\n${input_encoded}',
     result_tpl = 'Original Content:\n\n${input}\n\nTranslation:\n\n${output}',
     require_input = true,
   },
@@ -102,7 +102,65 @@ function M.close()
   win_id = nil
 end
 
-function M.createPopup(initialContent, width, height)
+function M.formatResult(data)
+  local result = ''
+  local candidates_number = #data['candidates']
+  if candidates_number == 1 then
+    if data['candidates'][1]['content'] == nil then
+      result = 'Gemini stoped with the reason:' .. data['candidates'][1]['finishReason'] .. '\n'
+      return result
+    else
+      result = '# There is only 1 candidate\n'
+      result = result .. data['candidates'][1]['content']['parts'][1]['text'] .. '\n'
+    end
+  else
+    result = '# There are ' .. candidates_number .. ' candidates\n'
+    for i = 1, candidates_number do
+      result = result .. '## Candidate number ' .. i .. '\n'
+      result = result .. data['candidates'][i]['content']['parts'][1]['text'] .. '\n'
+    end
+  end
+  return result
+end
+
+function M.askGeminiCallback(res, prompt, opts)
+  local result
+  if res.status ~= 200 then
+    if opts.handleError ~= nil then
+      result = opts.handleError(res.status, res.body)
+    else
+      result = 'Error: Gemini API responded with the status ' .. tostring(res.status) .. '\n\n' .. res.body
+    end
+  else
+    local data = vim.fn.json_decode(res.body)
+    result = M.formatResult(data)
+    if opts.handleResult ~= nil then
+      result = opts.handleResult(result)
+    end
+  end
+  opts.callback(result)
+end
+
+function M.askGemini(prompt, opts)
+  curl.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' .. M.opts.api_key,
+    {
+      raw = { '-H', 'Content-type: application/json' },
+      body = vim.fn.json_encode({
+        contents = {
+          {
+            parts = {
+              text = prompt,
+            },
+          },
+        },
+      }),
+      callback = function(res)
+        vim.schedule(function() M.askGeminiCallback(res, prompt, opts) end)
+      end
+    })
+end
+
+function M.createPopup(initialContent)
   M.close()
 
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -135,10 +193,6 @@ function M.createPopup(initialContent, width, height)
   return update
 end
 
-
--- Act as a Lua software developer.
--- Is there a more elegant way to write the M.handle function below?
--- 
 function M.fill(tpl, args)
   if tpl == nil then
     tpl = ''
@@ -150,46 +204,10 @@ function M.fill(tpl, args)
   return tpl
 end
 
--- function M.handle(name, input)
---   local def = M.prompts[name]
---   local width = vim.fn.winwidth(0)
---   local height = vim.fn.winheight(0)
---   local args = {
---     locale = M.opts.locale,
---     alternate_locale = M.opts.alternate_locale,
---     input = input,
---     input_encoded = vim.fn.json_encode(input),
---   }
---   local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
---   local prompt = M.fill(def.prompt_tpl, args)
--- 
---   gemini.askGemini(
---     prompt,
---     {
---       handleResult = function(gemini_output)
---         args.gemini_output = gemini_output
---         chatgpt.askChatGPT(
---           prompt,
---           {
---             handleResult = function(chatgpt_output)
---               args.chatgpt_output = chatgpt_output
---               args.output = args.gemini_output .. args.chatgpt_output
---               return M.fill(def.result_tpl or '${output}', args)
---             end,
---             callback = update,
---           },
---           M.opts.chatgpt_api_key
---         )
---       end,
---       callback = update,
---     },
---     M.opts.gemini_api_key
---   )
--- end
-
 function M.handle(name, input)
   local def = M.prompts[name]
-  local width, height = vim.fn.winwidth(0), vim.fn.winheight(0)
+  local width = vim.fn.winwidth(0)
+  local height = vim.fn.winheight(0)
   local args = {
     locale = M.opts.locale,
     alternate_locale = M.opts.alternate_locale,
