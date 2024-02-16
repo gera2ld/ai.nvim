@@ -203,7 +203,9 @@ function M.setup(opts)
       M.opts[k] = v
     end
   end
-  -- assert(M.opts.api_key ~= nil and M.opts.api_key ~= '', 'api_key is required')
+
+  assert(M.opts.gemini_api_key ~= nil and M.opts.gemini_api_key ~= '', 'gemini_api_key is required')
+  assert(M.opts.chatgpt_api_key ~= nil and M.opts.chatgpt_api_key ~= '', 'chatgpt_api_key is required')
 
   for k, v in pairs(M.prompts) do
     if v.command then
