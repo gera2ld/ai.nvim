@@ -1,22 +1,13 @@
 local curl = require('plenary.curl')
 local query = {}
 
+
+-- Explain this function with inline comments
+--
 function query.formatChatGPTResult(data)
-  local result = 'Error: Unknown error' 
+  local result = 'Error: Unknown error'
 
-  if data.choices == nil then
-    return 'Error: data.choices is nil'
-  end
-
-  if data.choices[0].message == nil then
-    result = 'Error: data.choices[0].message is nil'
-  end
-  
-  if data.choices[0].message.content == nil then
-    result = 'Error: data.choices[0].message.content is nil'
-  end
-
-  result = data.choices[0].message.content
+  result = data.choices[1].message.content
 
   return result
 end
