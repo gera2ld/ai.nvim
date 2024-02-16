@@ -1,9 +1,23 @@
-
 local curl = require('plenary.curl')
 local query = {}
 
 function query.formatChatGPTResult(data)
-  local result = data
+  local result = 'Error: Unknown error' 
+
+  if data.choices == nil then
+    return 'Error: data.choices is nil'
+  end
+
+  if data.choices[0].message == nil then
+    result = 'Error: data.choices[0].message is nil'
+  end
+  
+  if data.choices[0].message.content == nil then
+    result = 'Error: data.choices[0].message.content is nil'
+  end
+
+  result = data.choices[0].message.content
+
   return result
 end
 
@@ -17,7 +31,7 @@ function query.askChatGPTCallback(res, prompt, opts)
     end
   else
     local data = vim.fn.json_decode(res.body)
-    result = query.formatChatGPTResult(res.body)
+    result = query.formatChatGPTResult(data)
     if opts.handleResult ~= nil then
       result = opts.handleResult(result)
     end
