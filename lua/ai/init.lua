@@ -1,4 +1,5 @@
 local gemini = require('ai.gemini.query')
+local chatgpt = require('ai.chatgpt.query')
 
 local default_prompts = {
   define = {
@@ -156,7 +157,7 @@ function M.handle(name, input)
   }
   local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
   local prompt = M.fill(def.prompt_tpl, args)
-  gemini.askGemini(
+  chatgpt.askChatGPT(
     prompt, 
     {
       handleResult = function(output)
