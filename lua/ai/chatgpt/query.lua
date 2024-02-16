@@ -1,13 +1,13 @@
 local curl = require('plenary.curl')
 local query = {}
 
-function query.formatChatGPTResult(data)
+function query.formatResult(data)
   local result = '\n# This is ChatGPT answer\n\n'
   result = result .. data.choices[1].message.content .. '\n\n'
   return result
 end
 
-function query.askChatGPTCallback(res, prompt, opts)
+function query.askCallback(res, prompt, opts)
   local result
   if res.status ~= 200 then
     if opts.handleError ~= nil then
@@ -17,7 +17,7 @@ function query.askChatGPTCallback(res, prompt, opts)
     end
   else
     local data = vim.fn.json_decode(res.body)
-    result = query.formatChatGPTResult(data)
+    result = query.formatResult(data)
     if opts.handleResult ~= nil then
       result = opts.handleResult(result)
     end
@@ -25,7 +25,7 @@ function query.askChatGPTCallback(res, prompt, opts)
   opts.callback(result)
 end
 
-function query.askChatGPT(prompt, opts, api_key)
+function query.ask(prompt, opts, api_key)
   curl.post('https://api.openai.com/v1/chat/completions',
     {
       raw = {
@@ -41,7 +41,7 @@ function query.askChatGPT(prompt, opts, api_key)
           }
       ),
       callback = function(res)
-        vim.schedule(function() query.askChatGPTCallback(res, prompt, opts) end)
+        vim.schedule(function() query.askCallback(res, prompt, opts) end)
       end
     })
 end

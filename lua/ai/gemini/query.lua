@@ -1,7 +1,7 @@
 local curl = require('plenary.curl')
 local query = {}
 
-function query.formatGeminiResult(data)
+function query.formatResult(data)
   local result = ''
   local candidates_number = #data['candidates']
   if candidates_number == 1 then
@@ -22,7 +22,7 @@ function query.formatGeminiResult(data)
   return result
 end
 
-function query.askGeminiCallback(res, prompt, opts)
+function query.askCallback(res, prompt, opts)
   local result
   if res.status ~= 200 then
     if opts.handleError ~= nil then
@@ -32,7 +32,7 @@ function query.askGeminiCallback(res, prompt, opts)
     end
   else
     local data = vim.fn.json_decode(res.body)
-    result = query.formatGeminiResult(data)
+    result = query.formatResult(data)
     if opts.handleResult ~= nil then
       result = opts.handleResult(result)
     end
@@ -40,7 +40,7 @@ function query.askGeminiCallback(res, prompt, opts)
   opts.callback(result)
 end
 
-function query.askGemini(prompt, opts, api_key)
+function query.ask(prompt, opts, api_key)
   curl.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' .. api_key,
     {
       raw = { '-H', 'Content-type: application/json' },
@@ -54,7 +54,7 @@ function query.askGemini(prompt, opts, api_key)
         },
       }),
       callback = function(res)
-        vim.schedule(function() query.askGeminiCallback(res, prompt, opts) end)
+        vim.schedule(function() query.askCallback(res, prompt, opts) end)
       end
     })
 end
