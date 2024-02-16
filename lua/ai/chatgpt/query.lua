@@ -3,7 +3,7 @@ local curl = require('plenary.curl')
 local query = {}
 
 function query.formatChatGPTResult(data)
-  local result = data.choices[0].messages.content
+  local result = data.choices[0].message.content
   return result
 end
 
