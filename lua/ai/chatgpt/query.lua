@@ -2,8 +2,8 @@ local curl = require('plenary.curl')
 local query = {}
 
 function query.formatChatGPTResult(data)
-  local result = 'Error: Unknown error'
-  result = data.choices[1].message.content
+  local result = '\n# This is ChatGPT answer\n'
+  result = result .. data.choices[1].message.content .. '\n\n'
   return result
 end
 

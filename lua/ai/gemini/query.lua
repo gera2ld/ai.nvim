@@ -6,10 +6,10 @@ function query.formatGeminiResult(data)
   local candidates_number = #data['candidates']
   if candidates_number == 1 then
     if data['candidates'][1]['content'] == nil then
-      result = 'Gemini stoped with the reason:' .. data['candidates'][1]['finishReason'] .. '\n'
+      result = '\n#Gemini error\n\nGemini stoped with the reason:' .. data['candidates'][1]['finishReason'] .. '\n'
       return result
     else
-      result = '# There is only 1 Gemini candidate\n'
+      result = '\n# This is Gemini answer\n'
       result = result .. data['candidates'][1]['content']['parts'][1]['text'] .. '\n'
     end
   else

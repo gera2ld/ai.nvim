@@ -157,18 +157,31 @@ function M.handle(name, input)
   }
   local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
   local prompt = M.fill(def.prompt_tpl, args)
-  chatgpt.askChatGPT(
-    prompt, 
+
+  gemini.askGemini(
+    prompt,
     {
-      handleResult = function(output)
-        args.output = output
-        return M.fill(def.result_tpl or '${output}', args)
+      handleResult = function(gemini_output)
+        args.gemini_output = gemini_output
+        chatgpt.askChatGPT(
+          prompt,
+          {
+            handleResult = function(chatgpt_output)
+              args.chatgpt_output = chatgpt_output
+              args.output = args.gemini_output .. args.chatgpt_output
+              return M.fill(def.result_tpl or '${output}', args)
+            end,
+            callback = update,
+          },
+          M.opts.api_key
+        )
       end,
       callback = update,
     },
     M.opts.api_key
   )
 end
+
 
 function M.assign(table, other)
   for k, v in pairs(other) do
