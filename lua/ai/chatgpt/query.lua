@@ -32,15 +32,14 @@ function query.askChatGPT(prompt, opts, api_key)
         { '-H', 'Content-type: application/json' },
         { '-H', 'Authorization: Bearer ' .. api_key }
       },
-      body = vim.fn.json_encode({
-        contents =
+      body = vim.fn.json_encode(
           {
             model = 'gpt-4',
             messages = {
               { role = 'user', content = prompt}},
             temperature = 0.7
           }
-      }),
+      ) 
       callback = function(res)
         vim.schedule(function() query.askChatGPTCallback(res, prompt, opts) end)
       end
