@@ -27,9 +27,9 @@ local default_prompts = {
   },
   freeStyle = {
     command = 'GeminiAsk',
-    loading_tpl = 'Question:\n\n${input}\n\nAsking Gemini...',
+    loading_tpl = 'Loading...',
     prompt_tpl = '${input}',
-    result_tpl = 'Question:\n\n${input}\n\nAnswer:\n\n${output}',
+    result_tpl = '${output}',
     require_input = true,
   },
 }
@@ -134,6 +134,10 @@ function M.createPopup(initialContent, width, height)
   return update
 end
 
+
+-- Act as a Lua software developer.
+-- Is there a more elegant way to write the M.handle function below?
+-- 
 function M.fill(tpl, args)
   if tpl == nil then
     tpl = ''
