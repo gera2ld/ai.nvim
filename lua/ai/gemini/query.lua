@@ -9,7 +9,7 @@ function query.formatGeminiResult(data)
       result = '\n#Gemini error\n\nGemini stoped with the reason:' .. data['candidates'][1]['finishReason'] .. '\n'
       return result
     else
-      result = '\n# This is Gemini answer\n'
+      result = '\n# This is Gemini answer\n\n'
       result = result .. data['candidates'][1]['content']['parts'][1]['text'] .. '\n'
     end
   else
