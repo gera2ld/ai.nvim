@@ -5,7 +5,7 @@ local default_prompts = {
     command = 'GeminiDefine',
     loading_tpl = 'Define:\n\n${input}\n\nAsking Gemini...',
     prompt_tpl =
-    'Define the content below in locale ${locale}. The output is a bullet list of definitions grouped by parts of speech in plain text. Each item of the definition list contains pronunciation using IPA, meaning, and a list of usage examples with at most 2 items. Do not return anything else. Here is the content:\n\n${input_encoded}',
+      'Define the content below in locale ${locale}. The output is a bullet list of definitions grouped by parts of speech in plain text. Each item of the definition list contains pronunciation using IPA, meaning, and a list of usage examples with at most 2 items. Do not return anything else. Here is the content:\n\n${input_encoded}',
     result_tpl = 'Original Content:\n\n${input}\n\nDefinition:\n\n${output}',
     require_input = true,
   },
@@ -13,7 +13,7 @@ local default_prompts = {
     command = 'GeminiTranslate',
     loading_tpl = 'Translating the content below:\n\n${input}\n\nAsking Gemini...',
     prompt_tpl =
-    'Translate the content below into locale ${locale}. Translate into ${alternate_locale} instead if it is already in ${locale}. Do not return anything else. Here is the content:\n\n${input_encoded}',
+      'Translate the content below into locale ${locale}. Translate into ${alternate_locale} instead if it is already in ${locale}. Do not return anything else. Here is the content:\n\n${input_encoded}',
     result_tpl = 'Original Content:\n\n${input}\n\nTranslation:\n\n${output}',
     require_input = true,
   },
@@ -156,13 +156,17 @@ function M.handle(name, input)
   }
   local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
   local prompt = M.fill(def.prompt_tpl, args)
-  gemini.askGemini(prompt, {
-    handleResult = function(output)
-      args.output = output
-      return M.fill(def.result_tpl or '${output}', args)
-    end,
-    callback = update,
-  })
+  gemini.askGemini(
+    prompt, 
+    {
+      handleResult = function(output)
+        args.output = output
+        return M.fill(def.result_tpl or '${output}', args)
+      end,
+      callback = update,
+    },
+    M.opts.api_key
+  )
 end
 
 function M.assign(table, other)
