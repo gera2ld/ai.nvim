@@ -62,7 +62,7 @@ end
 local function joinLines(lines)
   local result = ''
   for _, line in ipairs(lines) do
-    result = result .. line
+    result = result .. line .. '\n'
   end
   return result
 end
