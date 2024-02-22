@@ -1,4 +1,5 @@
-local curl = require('plenary.curl')
+local gemini = require('ai.gemini.query')
+local chatgpt = require('ai.chatgpt.query')
 
 local default_prompts = {
   define = {
@@ -26,16 +27,17 @@ local default_prompts = {
   },
   freeStyle = {
     command = 'GeminiAsk',
-    loading_tpl = 'Question:\n\n${input}\n\nAsking Gemini...',
+    loading_tpl = 'Loading...',
     prompt_tpl = '${input}',
-    result_tpl = 'Question:\n\n${input}\n\nAnswer:\n\n${output}',
+    result_tpl = '${output}',
     require_input = true,
   },
 }
 
 local M = {}
 M.opts = {
-  api_key = '',
+  gemini_api_key = '',
+  chatgpt_api_key = '',
   locale = 'en',
   alternate_locale = 'zh',
   result_popup_gets_focus = false,
@@ -100,65 +102,6 @@ function M.close()
   win_id = nil
 end
 
-function M.formatResult(data)
-  local result = ''
-  local candidates_number = #data['candidates']
-  if candidates_number == 1 then
-    if data['candidates'][1]['content'] == nil then
-      result = 'Gemini stoped with the reason:' .. data['candidates'][1]['finishReason'] .. '\n'
-      return result
-    else
-      result = '# There is only 1 candidate\n'
-      result = result .. data['candidates'][1]['content']['parts'][1]['text'] .. '\n'
-    end
-  else
-    result = '# There are ' .. candidates_number .. ' candidates\n'
-    for i = 1, candidates_number do
-      result = result .. '## Candidate number ' .. i .. '\n'
-      result = result .. data['candidates'][i]['content']['parts'][1]['text'] .. '\n'
-    end
-  end
-  return result
-end
-
-function M.askGeminiCallback(res, prompt, opts)
-  local result
-  if res.status ~= 200 then
-    if opts.handleError ~= nil then
-      result = opts.handleError(res.status, res.body)
-    else
-      result = 'Error: Gemini API responded with the status ' .. tostring(res.status) .. '\n\n' .. res.body
-    end
-  else
-    local data = vim.fn.json_decode(res.body)
-    result = M.formatResult(data)
-    if opts.handleResult ~= nil then
-      result = opts.handleResult(result)
-    end
-  end
-  opts.callback(result)
-end
-
-function M.askGemini(prompt, opts)
-  curl.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' .. M.opts.api_key,
-    {
-      raw = { '-H', 'Content-type: application/json' },
-      body = vim.fn.json_encode({
-        contents = {
-          {
-            parts = {
-              text = prompt,
-            },
-          },
-        },
-      }),
-      callback = function(res)
-        vim.schedule(function() M.askGeminiCallback(res, prompt, opts) end)
-      end
-    })
-end
-
-
 function M.createPopup(initialContent, width, height)
   M.close()
 
@@ -213,15 +156,34 @@ function M.handle(name, input)
     input = input,
     input_encoded = vim.fn.json_encode(input),
   }
+
   local update = M.createPopup(M.fill(def.loading_tpl, args), width - 24, height - 16)
   local prompt = M.fill(def.prompt_tpl, args)
-  M.askGemini(prompt, {
-    handleResult = function(output)
-      args.output = output
-      return M.fill(def.result_tpl or '${output}', args)
-    end,
-    callback = update,
-  })
+
+  -- Function to handle both gemini and chatgpt results
+  local function handleResult(output, output_key)
+    args[output_key] = output
+    args.output = (args.gemini_output or '') .. (args.chatgpt_output or '')
+    return M.fill(def.result_tpl or '${output}', args)
+  end
+
+  gemini.ask(
+    prompt,
+    {
+      handleResult = function(gemini_output) return handleResult(gemini_output, 'gemini_output') end,
+      callback = update
+    },
+    M.opts.gemini_api_key
+  )
+
+  chatgpt.ask(
+    prompt,
+    {
+      handleResult = function(chatgpt_output) return handleResult(chatgpt_output, 'chatgpt_output') end,
+      callback = update
+    },
+    M.opts.chatgpt_api_key
+  )
 end
 
 function M.assign(table, other)
@@ -241,7 +203,9 @@ function M.setup(opts)
       M.opts[k] = v
     end
   end
-  assert(M.opts.api_key ~= nil and M.opts.api_key ~= '', 'api_key is required')
+
+  assert(M.opts.gemini_api_key ~= nil and M.opts.gemini_api_key ~= '', 'gemini_api_key is required')
+  assert(M.opts.chatgpt_api_key ~= nil and M.opts.chatgpt_api_key ~= '', 'chatgpt_api_key is required')
 
   for k, v in pairs(M.prompts) do
     if v.command then
