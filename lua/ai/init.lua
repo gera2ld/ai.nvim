@@ -1,5 +1,6 @@
 local util = require('ai.util')
-local gemini = require('ai.gemini')
+local gemini = require('ai.providers.gemini')
+local openai = require('ai.providers.openai')
 local default_prompts = require('ai.prompts')
 
 local M = {}
@@ -7,17 +8,31 @@ M.opts = {
   locale = 'en',
   alternate_locale = 'zh',
   result_popup_gets_focus = false,
+  prompts = default_prompts,
   gemini = {
     api_key = '',
+    model = 'gemini-pro',
     proxy = '',
   },
-  -- @deprecated in favor of `gemini.api_key`
-  api_key = '',
+  openai = {
+    api_key = '',
+    base_url = 'https://api.openai.com/v1',
+    model = 'gpt-4',
+    proxy = '',
+  },
 }
-M.prompts = default_prompts
+
+local providers = {
+  gemini = gemini,
+  openai = openai,
+}
 
 function M.handle(name, input)
-  local def = M.prompts[name]
+  local def = M.opts.prompts[name]
+  local provider = providers[def.provider]
+  assert(provider, 'Provider is not available: ' .. def.provider)
+  local providerOpts = M.opts[def.provider]
+  provider.precheck(providerOpts)
   local width = vim.fn.winwidth(0)
   local height = vim.fn.winheight(0)
   local args = {
@@ -28,9 +43,16 @@ function M.handle(name, input)
   local helpers = {
     json_encode = vim.fn.json_encode,
   }
-  local update = util.createPopup(util.fill(def.loading_tpl, args, helpers), width - 24, height - 16, M.opts)
+  local update = util.createPopup(
+    util.fill(def.loading_tpl, args, helpers),
+    {
+      width = width - 24,
+      height = height - 16,
+      result_popup_gets_focus = M.opts.result_popup_gets_focus,
+    }
+  )
   local prompt = util.fill(def.prompt_tpl, args, helpers)
-  gemini.request(prompt, M.opts, {
+  provider.request(prompt, providerOpts, {
     handleResult = function(output)
       args.output = output
       return util.fill(def.result_tpl or '${output}', args, helpers)
@@ -40,24 +62,9 @@ function M.handle(name, input)
 end
 
 function M.setup(opts)
-  for k, v in pairs(opts) do
-    if k == 'prompts' then
-      M.prompts = {}
-      util.assign(M.prompts, default_prompts)
-      util.assign(M.prompts, v)
-    elseif M.opts[k] ~= nil then
-      M.opts[k] = v
-    end
-  end
-  if not util.isEmpty(M.opts.api_key) and util.isEmpty(M.opts.gemini.api_key) then
-    M.opts.gemini.api_key = M.opts.api_key
-    vim.defer_fn(function()
-      vim.notify('[ai.nvim] `opts.api_key` is deprecated in favor of `opts.gemini.api_key`')
-    end, 1000)
-  end
-  assert(not util.isEmpty(M.opts.gemini.api_key), 'opts.gemini.api_key is required')
+  M.opts = util.merge(M.opts, opts)
 
-  for k, v in pairs(M.prompts) do
+  for k, v in pairs(M.opts.prompts) do
     if v.command then
       vim.api.nvim_create_user_command(v.command, function(args)
         local text = args['args']

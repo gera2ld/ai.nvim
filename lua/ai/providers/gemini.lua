@@ -37,9 +37,13 @@ local function askGeminiCallback(res, ctx)
   ctx.callback(result)
 end
 
+function M.precheck(opts)
+  assert(not util.isEmpty(opts.api_key), 'opts.gemini.api_key is required')
+end
+
 function M.request(prompt, opts, ctx)
-  assert(not util.isEmpty(opts.api_key), 'apiKey is required')
-  curl.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' .. opts.api_key,
+  curl.post(
+    'https://generativelanguage.googleapis.com/v1beta/models/' .. opts.model .. ':generateContent?key=' .. opts.api_key,
     {
       raw = { '-H', 'Content-type: application/json' },
       proxy = opts.proxy,

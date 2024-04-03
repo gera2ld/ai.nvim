@@ -28,11 +28,26 @@ function M.join(parts, sep)
   return result
 end
 
-function M.assign(table, other)
-  for k, v in pairs(other) do
-    table[k] = v
+function M.assign(target, other)
+  if other then
+    for k, v in pairs(other) do
+      target[k] = v
+    end
   end
-  return table
+  return target
+end
+
+function M.merge(target, other)
+  target = M.assign({}, target)
+  for key, value in pairs(other) do
+    local original = target[key]
+    if type(original) == 'table' and type(value) == 'table' then
+      target[key] = M.merge(original, value)
+    else
+      target[key] = value
+    end
+  end
+  return target
 end
 
 function M.isEmpty(text)
@@ -89,7 +104,7 @@ end
 
 local win_id
 
-function M.createPopup(initialContent, width, height, opts)
+function M.createPopup(initialContent, opts)
   M.closePopup()
 
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -109,8 +124,8 @@ function M.createPopup(initialContent, width, height, opts)
     border = 'single',
     title = 'ai.nvim',
     style = 'minimal',
-    width = width,
-    height = height,
+    width = opts.width,
+    height = opts.height,
     row = 1,
     col = 0,
   })

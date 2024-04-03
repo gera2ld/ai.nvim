@@ -1,12 +1,15 @@
 # ai.nvim
 
-A Neovim plugin powered by Google Gemini.
+A Neovim plugin powered by AI.
+
+Supported providers:
+
+- Google Gemini: [get an API key](https://ai.google.dev/tutorials/setup) for free.
+- OpenAI compatible APIs
 
 https://github.com/gera2ld/ai.nvim/assets/3139113/539834ed-af80-4ded-81f4-26afa80ddfd3
 
 ## Installation
-
-First [get an API key](https://ai.google.dev/tutorials/setup) from Gemini. It's free!
 
 Using lazy.nvim:
 
@@ -17,7 +20,14 @@ Using lazy.nvim:
   opts = {
     gemini = {
       api_key = 'YOUR_GEMINI_API_KEY', -- or read from env: `os.getenv('GEMINI_API_KEY')`
-      proxy = '',
+      -- model = 'gemini-pro',
+      -- proxy = '',
+    },
+    openai = {
+      api_key = 'YOUR_OPENAI_API_KEY', -- or read from env: `os.getenv('OPENAI_API_KEY')`
+      -- base_url = 'https://api.openai.com/v1',
+      -- model = 'gpt-4',
+      -- proxy = '',
     },
     -- The locale for the content to be defined/translated into
     locale = 'en',
@@ -53,10 +63,13 @@ Using lazy.nvim:
 " Improve content selected or passed to the command
 " Useful to correct grammar mistakes and make the expressions more native.
 :'<,'>GeminiImprove
-:GeminiTranslate Me is happy.
+:GeminiImprove Me is happy.
 
 " Ask anything
 :GeminiAsk Tell a joke.
+
+" Ask OpenAI
+:OpenAIAsk Tell a joke.
 ```
 
 ### Custom Prompts
@@ -67,6 +80,7 @@ opts = {
     rock = {
       -- Create a user command for this prompt
       command = 'GeminiRock',
+      provider = 'gemini', -- or 'openai'
       loading_tpl = 'Loading...',
       prompt_tpl = 'Tell a joke',
       result_tpl = 'Here is your joke:\n\n{{output}}',
