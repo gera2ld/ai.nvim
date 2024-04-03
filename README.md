@@ -15,7 +15,10 @@ Using lazy.nvim:
   'gera2ld/ai.nvim',
   dependencies = 'nvim-lua/plenary.nvim',
   opts = {
-    api_key = 'YOUR_GEMINI_API_KEY', -- or read from env: `os.getenv('GEMINI_API_KEY')`
+    gemini = {
+      api_key = 'YOUR_GEMINI_API_KEY', -- or read from env: `os.getenv('GEMINI_API_KEY')`
+      proxy = '',
+    },
     -- The locale for the content to be defined/translated into
     locale = 'en',
     -- The locale for the content in the locale above to be translated into

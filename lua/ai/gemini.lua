@@ -19,29 +19,30 @@ local function formatResult(data)
   return result
 end
 
-local function askGeminiCallback(res, opts)
+local function askGeminiCallback(res, ctx)
   local result
   if res.status ~= 200 then
-    if opts.handleError ~= nil then
-      result = opts.handleError(res.status, res.body)
+    if ctx.handleError ~= nil then
+      result = ctx.handleError(res.status, res.body)
     else
       result = 'Error: Gemini API responded with the status ' .. tostring(res.status) .. '\n\n' .. res.body
     end
   else
     local data = vim.fn.json_decode(res.body)
     result = formatResult(data)
-    if opts.handleResult ~= nil then
-      result = opts.handleResult(result)
+    if ctx.handleResult ~= nil then
+      result = ctx.handleResult(result)
     end
   end
-  opts.callback(result)
+  ctx.callback(result)
 end
 
-function M.request(prompt, opts)
-  assert(not util.isEmpty(opts.apiKey), 'apiKey is required')
-  curl.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' .. opts.apiKey,
+function M.request(prompt, opts, ctx)
+  assert(not util.isEmpty(opts.api_key), 'apiKey is required')
+  curl.post('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' .. opts.api_key,
     {
       raw = { '-H', 'Content-type: application/json' },
+      proxy = opts.proxy,
       body = vim.fn.json_encode({
         contents = {
           {
@@ -58,7 +59,7 @@ function M.request(prompt, opts)
         }
       }),
       callback = function(res)
-        vim.schedule(function() askGeminiCallback(res, opts) end)
+        vim.schedule(function() askGeminiCallback(res, ctx) end)
       end
     })
 end

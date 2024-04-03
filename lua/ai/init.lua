@@ -4,10 +4,15 @@ local default_prompts = require('ai.prompts')
 
 local M = {}
 M.opts = {
-  api_key = '',
   locale = 'en',
   alternate_locale = 'zh',
   result_popup_gets_focus = false,
+  gemini = {
+    api_key = '',
+    proxy = '',
+  },
+  -- @deprecated in favor of `gemini.api_key`
+  api_key = '',
 }
 M.prompts = default_prompts
 
@@ -25,8 +30,7 @@ function M.handle(name, input)
   }
   local update = util.createPopup(util.fill(def.loading_tpl, args, helpers), width - 24, height - 16, M.opts)
   local prompt = util.fill(def.prompt_tpl, args, helpers)
-  gemini.request(prompt, {
-    apiKey = M.opts.api_key,
+  gemini.request(prompt, M.opts, {
     handleResult = function(output)
       args.output = output
       return util.fill(def.result_tpl or '${output}', args, helpers)
@@ -45,7 +49,13 @@ function M.setup(opts)
       M.opts[k] = v
     end
   end
-  assert(not util.isEmpty(M.opts.api_key), 'api_key is required')
+  if not util.isEmpty(M.opts.api_key) and util.isEmpty(M.opts.gemini.api_key) then
+    M.opts.gemini.api_key = M.opts.api_key
+    vim.defer_fn(function()
+      vim.notify('[ai.nvim] `opts.api_key` is deprecated in favor of `opts.gemini.api_key`')
+    end, 1000)
+  end
+  assert(not util.isEmpty(M.opts.gemini.api_key), 'opts.gemini.api_key is required')
 
   for k, v in pairs(M.prompts) do
     if v.command then
