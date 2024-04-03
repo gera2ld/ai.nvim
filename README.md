@@ -69,7 +69,7 @@ opts = {
       command = 'GeminiRock',
       loading_tpl = 'Loading...',
       prompt_tpl = 'Tell a joke',
-      result_tpl = 'Here is your joke:\n\n$output',
+      result_tpl = 'Here is your joke:\n\n{{output}}',
       require_input = false,
     },
   },
@@ -88,13 +88,20 @@ The prompts will be merged into built-in prompts. Here are the available fields 
 
 Placeholders can be used in templates. If not available, it will be left as is.
 
-| Placeholders          | Description                                                                                | Availability      |
-| --------------------- | ------------------------------------------------------------------------------------------ | ----------------- |
-| `${locale}`           | `opts.locale`                                                                              | Always            |
-| `${alternate_locale}` | `opts.alternate_locale`                                                                    | Always            |
-| `${input}`            | The text selected or passed to the command.                                                | Always            |
-| `${input_encoded}`    | The text encoded with JSON so that Gemini will take it as literal instead of a new prompt. | Always            |
-| `${output}`           | The result returned by Gemini.                                                             | After the request |
+| Placeholders           | Description                                 | Availability      |
+| ---------------------- | ------------------------------------------- | ----------------- |
+| `{{locale}}`           | `opts.locale`                               | Always            |
+| `{{alternate_locale}}` | `opts.alternate_locale`                     | Always            |
+| `{{input}}`            | The text selected or passed to the command. | Always            |
+| `{{output}}`           | The result returned by Gemini.              | After the request |
+
+Placeholders can be used along with helpers to transform the values, in the form of `{{ input |> helper1 |> helper2 }}`. For example, `{{ input |> json_encode }}` will be replaced with `json_encode(input)`.
+
+Possible helpers are:
+
+| Helpers       | Description             |
+| ------------- | ----------------------- |
+| `json_encode` | Encode the data as JSON |
 
 We can either call a prompt with the associated command:
 

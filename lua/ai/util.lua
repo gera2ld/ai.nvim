@@ -3,6 +3,7 @@ local M = {}
 function M.split(input, sep)
   local parts = {}
   local offset = 1
+  local lsep = string.len(sep)
   while offset > 0 do
     local i = string.find(input, sep, offset)
     if i == nil then
@@ -10,7 +11,7 @@ function M.split(input, sep)
       offset = 0
     else
       table.insert(parts, string.sub(input, offset, i - 1))
-      offset = i + 1
+      offset = i + lsep
     end
   end
   return parts
@@ -53,9 +54,12 @@ function M.fill(tpl, args, helpers)
     table.insert(parts, string.sub(tpl, offset, i - 1))
     local j = string.find(tpl, '}}', i)
     local params = M.split(string.sub(tpl, i + 2, j - 1), '|>')
+    for k, param in ipairs(params) do
+      params[k] = string.gsub(param, '%s+', '')
+    end
     local value = args[params[1]]
     table.remove(params, 1)
-    for k, pipe in ipairs(params) do
+    for _, pipe in ipairs(params) do
       local pipe_handler = helpers[pipe]
       assert(pipe_handler ~= nil, 'Invalid pipe: ' .. pipe)
       value = pipe_handler(value)
