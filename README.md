@@ -81,6 +81,7 @@ opts = {
       -- Create a user command for this prompt
       command = 'GeminiRock',
       provider = 'gemini', -- or 'openai'
+      -- model = 'gemini-pro', -- optionally override the global model
       loading_tpl = 'Loading...',
       prompt_tpl = 'Tell a joke',
       result_tpl = 'Here is your joke:\n\n{{output}}',

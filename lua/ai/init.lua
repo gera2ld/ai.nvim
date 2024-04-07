@@ -32,6 +32,9 @@ function M.handle(name, input)
   local provider = providers[def.provider]
   assert(provider, 'Provider is not available: ' .. def.provider)
   local providerOpts = M.opts[def.provider]
+  if def.model then
+    providerOpts.model = def.model
+  end
   provider.precheck(providerOpts)
   local width = vim.fn.winwidth(0)
   local height = vim.fn.winheight(0)
