@@ -22,7 +22,7 @@ local prompts = {
     provider = 'gemini',
     loading_tpl = 'Improve the content below:\n\n{{input}}\n\nAsking Gemini...',
     prompt_tpl =
-    'Improve the given content in the same locale. Do not return anything else. Here is the content:\n\n{{input |> json_encode}}',
+    'Make the given content more native, correcting grammar while keeping the same locale. Do not return anything else. Here is the content:\n{{input |> json_encode}}',
     result_tpl = 'Original Content:\n\n{{input}}\n\nImproved Content:\n\n{{output}}',
     require_input = true,
   },

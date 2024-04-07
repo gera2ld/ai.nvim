@@ -50,7 +50,7 @@ Using lazy.nvim:
 
 ```viml
 " Define the word under cursor
-:GeminiDefineCword
+:GeminiDefine
 
 " Define the word or phrase selected or passed to the command
 :'<,'>GeminiDefine

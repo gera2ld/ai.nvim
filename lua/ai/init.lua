@@ -71,6 +71,9 @@ function M.setup(opts)
         if util.isEmpty(text) then
           text = util.getSelectedText(true)
         end
+        if util.isEmpty(text) then
+          text = vim.fn.expand('<cword>')
+        end
         if not v.require_input or not util.isEmpty(text) then
           -- delayed so the popup won't be closed immediately
           vim.schedule(function()
@@ -85,12 +88,5 @@ end
 vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
   callback = util.closePopup,
 })
-
-vim.api.nvim_create_user_command('GeminiDefineCword', function()
-  local text = vim.fn.expand('<cword>')
-  if not util.isEmpty(text) then
-    M.handle('define', text)
-  end
-end, {})
 
 return M
