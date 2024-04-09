@@ -7,12 +7,13 @@ local function formatResult(data)
   local result = ''
   -- blocked
   -- {"promptFeedback": {"blockReason": "SAFETY", "safetyRatings": [{"probability": "NEGLIGIBLE", "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT"}, {"probability": "NEGLIGIBLE", "category": "HARM_CATEGORY_HATE_SPEECH"}, {"probability": "MEDIUM", "category": "HARM_CATEGORY_HARASSMENT"}, {"probability": "NEGLIGIBLE", "category": "HARM_CATEGORY_DANGEROUS_CONTENT"}]}}
-  if data['promptFeedback']['blockReason'] then
-    return 'Blocked: ' .. data['promptFeedback']['blockReason']
+  local blockReason = util.get(data, { 'promptFeedback', 'blockReason' })
+  if blockReason then
+    return 'Blocked: ' .. blockReason
   end
   if data['candidates'] then
     for i, candidate in ipairs(data['candidates']) do
-      local text = candidate['content']['parts'][1]['text']
+      local text = util.get(candidate, { 'content', 'parts', 1, 'text' })
       result = result .. '## Answer ' .. i .. '\n\n' .. text .. '\n'
     end
   end

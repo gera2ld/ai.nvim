@@ -1,5 +1,16 @@
 local M = {}
 
+function M.get(target, path)
+  local value = target
+  for _, key in ipairs(path) do
+    if value == nil then
+      break
+    end
+    value = value[key]
+  end
+  return value
+end
+
 function M.split(input, sep)
   local parts = {}
   local offset = 1
