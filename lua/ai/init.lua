@@ -58,7 +58,7 @@ function M.handle(name, input)
   provider.request(prompt, providerOpts, {
     handleResult = function(output)
       args.output = output
-      return util.fill(def.result_tpl or '${output}', args, helpers)
+      return util.fill(def.result_tpl or '{{output}}', args, helpers)
     end,
     callback = update,
   })
