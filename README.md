@@ -18,17 +18,8 @@ Using lazy.nvim:
   'gera2ld/ai.nvim',
   dependencies = 'nvim-lua/plenary.nvim',
   opts = {
-    gemini = {
-      api_key = 'YOUR_GEMINI_API_KEY', -- or read from env: `os.getenv('GEMINI_API_KEY')`
-      -- model = 'gemini-pro',
-      -- proxy = '',
-    },
-    openai = {
-      api_key = 'YOUR_OPENAI_API_KEY', -- or read from env: `os.getenv('OPENAI_API_KEY')`
-      -- base_url = 'https://api.openai.com/v1',
-      -- model = 'gpt-4',
-      -- proxy = '',
-    },
+    -- Default provider for a prompt if not specified
+    provider = 'openai',
     -- The locale for the content to be defined/translated into
     locale = 'en',
     -- The locale for the content in the locale above to be translated into
@@ -39,7 +30,51 @@ Using lazy.nvim:
     result_popup_gets_focus = false,
     -- Define custom prompts here, see below for more details
     prompts = {},
+
+    -- API keys and relavant config
+    gemini = {
+      api_key = 'YOUR_GEMINI_API_KEY',
+      -- model = 'gemini-pro',
+      -- proxy = '',
+    },
+    openai = {
+      api_key = 'YOUR_OPENAI_API_KEY',
+      -- base_url = 'https://api.openai.com/v1',
+      -- model = 'gpt-4',
+      -- proxy = '',
+    },
   },
+  event = 'VeryLazy',
+},
+```
+
+Alternatively, load API keys from an environment variable:
+
+```bash
+export AI_NVIM_PROVIDER_CONFIG='{
+  "openai": {
+    "api_key": "YOUR_OPENAI_API_KEY"
+  }
+}'
+```
+
+```lua
+{
+  'gera2ld/ai.nvim',
+  dependencies = 'nvim-lua/plenary.nvim',
+  config = function ()
+    require('ai').setup(
+      require('ai.util').merge(
+        {
+          locale = 'en',
+          alternate_locale = 'zh',
+          prompts = {},
+        },
+        -- API keys and relavant config stored in an environment variable
+        vim.fn.json_decode(os.getenv('AI_NVIM_PROVIDER_CONFIG'))
+      )
+    )
+  end,
   event = 'VeryLazy',
 },
 ```
@@ -50,26 +85,26 @@ Using lazy.nvim:
 
 ```viml
 " Define the word under cursor
-:GeminiDefine
+:AIDefine
 
 " Define the word or phrase selected or passed to the command
-:'<,'>GeminiDefine
-:GeminiDefine happy
+:'<,'>AIDefine
+:AIDefine happy
 
 " Translate content selected or passed to the commmand
-:'<,'>GeminiTranslate
-:GeminiTranslate I am happy.
+:'<,'>AITranslate
+:AITranslate I am happy.
 
 " Improve content selected or passed to the command
 " Useful to correct grammar mistakes and make the expressions more native.
-:'<,'>GeminiImprove
-:GeminiImprove Me is happy.
+:'<,'>AIImprove
+:AIImprove Me is happy.
 
 " Ask anything
-:GeminiAsk Tell a joke.
+:AskGemini Tell a joke.
 
 " Ask OpenAI
-:OpenAIAsk Tell a joke.
+:AskOpenAI Tell a joke.
 ```
 
 ### Custom Prompts
@@ -81,7 +116,7 @@ opts = {
       -- Create a user command for this prompt
       command = 'GeminiRock',
       provider = 'gemini', -- or 'openai'
-      -- model = 'gemini-pro', -- optionally override the global model
+      -- model = 'gemini-pro', -- optionally override the default model
       loading_tpl = 'Loading...',
       prompt_tpl = 'Tell a joke',
       result_tpl = 'Here is your joke:\n\n{{output}}',

@@ -39,8 +39,8 @@ function M.join(parts, sep)
   return result
 end
 
-function M.assign(target, other)
-  if other then
+function M.assign(target, ...)
+  for _, other in ipairs { ... } do
     for k, v in pairs(other) do
       target[k] = v
     end
@@ -48,14 +48,16 @@ function M.assign(target, other)
   return target
 end
 
-function M.merge(target, other)
+function M.merge(target, ...)
   target = M.assign({}, target)
-  for key, value in pairs(other) do
-    local original = target[key]
-    if type(original) == 'table' and type(value) == 'table' then
-      target[key] = M.merge(original, value)
-    else
-      target[key] = value
+  for _, other in ipairs { ... } do
+    for key, value in pairs(other) do
+      local original = target[key]
+      if type(original) == 'table' and type(value) == 'table' then
+        target[key] = M.merge(original, value)
+      else
+        target[key] = value
+      end
     end
   end
   return target

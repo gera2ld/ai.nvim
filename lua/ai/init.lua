@@ -9,15 +9,16 @@ M.opts = {
   alternate_locale = 'zh',
   result_popup_gets_focus = false,
   prompts = default_prompts,
+  provider = 'openai', -- can be overridden in prompts
   gemini = {
     api_key = '',
-    model = 'gemini-pro',
+    model = 'gemini-pro', -- can be overridden in prompts
     proxy = '',
   },
   openai = {
     api_key = '',
     base_url = 'https://api.openai.com/v1',
-    model = 'gpt-4',
+    model = 'gpt-3.5-turbo', -- can be overridden in prompts
     proxy = '',
   },
 }
@@ -29,11 +30,12 @@ local providers = {
 
 function M.handle(name, input)
   local def = M.opts.prompts[name]
-  local provider = providers[def.provider]
-  assert(provider, 'Provider is not available: ' .. def.provider)
-  local providerOpts = M.opts[def.provider]
+  local provider_name = def.provider or M.opts.provider
+  local provider = providers[provider_name]
+  assert(provider, 'Provider is not available: ' .. provider_name)
+  local providerOpts = M.opts[provider_name]
   if def.model then
-    providerOpts.model = def.model
+    providerOpts = M.merge(providerOpts, { model = def.model })
   end
   provider.precheck(providerOpts)
   local width = vim.fn.winwidth(0)
