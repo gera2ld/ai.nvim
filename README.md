@@ -18,18 +18,25 @@ Using lazy.nvim:
   'gera2ld/ai.nvim',
   dependencies = 'nvim-lua/plenary.nvim',
   opts = {
-    -- Default provider for a prompt if not specified
-    provider = 'openai',
-    -- The locale for the content to be defined/translated into
-    locale = 'en',
-    -- The locale for the content in the locale above to be translated into
-    alternate_locale = 'zh',
-    -- Gemini's answer is displayed in a popup buffer
+    -- AI's answer is displayed in a popup buffer
     -- Default behaviour is not to give it the focus because it is seen as a kind of tooltip
     -- But if you prefer it to get the focus, set to true.
     result_popup_gets_focus = false,
     -- Define custom prompts here, see below for more details
     prompts = {},
+    -- Default models for each prompt, can be overridden in the prompt definition
+    models = {
+      {
+        provider = 'gemini',
+        model = 'gemini-pro',
+        result_tpl = '## Gemini\n\n{{output}}',
+      },
+      {
+        provider = 'openai',
+        model = 'gpt-3.5-turbo',
+        result_tpl = '## GPT-3.5\n\n{{output}}',
+      },
+    },
 
     -- API keys and relavant config
     gemini = {
@@ -63,12 +70,16 @@ export AI_NVIM_PROVIDER_CONFIG='{
   'gera2ld/ai.nvim',
   dependencies = 'nvim-lua/plenary.nvim',
   config = function ()
-    require('ai').setup(
-      require('ai.util').merge(
+    local ai = require('ai')
+    ai.setup(
+      ai.util.assign(
         {
-          locale = 'en',
-          alternate_locale = 'zh',
-          prompts = {},
+          prompts = util.assign({}, ai.default_prompts, {
+            -- override default prompts
+          }),
+          models = {
+            -- override the default models
+          },
         },
         -- API keys and relavant config stored in an environment variable
         vim.fn.json_decode(os.getenv('AI_NVIM_PROVIDER_CONFIG'))
@@ -101,26 +112,29 @@ export AI_NVIM_PROVIDER_CONFIG='{
 :AIImprove Me is happy.
 
 " Ask anything
-:AskGemini Tell a joke.
-
-" Ask OpenAI
-:AskOpenAI Tell a joke.
+:AskAI Tell a joke.
 ```
 
 ### Custom Prompts
 
 ```lua
-opts = {
+{
   prompts = {
     rock = {
       -- Create a user command for this prompt
       command = 'GeminiRock',
-      provider = 'gemini', -- or 'openai'
-      -- model = 'gemini-pro', -- optionally override the default model
-      loading_tpl = 'Loading...',
+      header_tpl = '## Rock\n\n{{input}}',
       prompt_tpl = 'Tell a joke',
-      result_tpl = 'Here is your joke:\n\n{{output}}',
       require_input = false,
+
+      -- Optionally override the default models
+      models = {
+        {
+          provider = 'gemini',
+          model = 'gemini-pro',
+          result_tpl = '## Joke from Gemini\n\n{{output}}',
+        },
+      },
     },
   },
 }
@@ -140,8 +154,6 @@ Placeholders can be used in templates. If not available, it will be left as is.
 
 | Placeholders           | Description                                 | Availability      |
 | ---------------------- | ------------------------------------------- | ----------------- |
-| `{{locale}}`           | `opts.locale`                               | Always            |
-| `{{alternate_locale}}` | `opts.alternate_locale`                     | Always            |
 | `{{input}}`            | The text selected or passed to the command. | Always            |
 | `{{output}}`           | The result returned by Gemini.              | After the request |
 

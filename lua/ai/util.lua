@@ -158,4 +158,17 @@ function M.closePopup()
   win_id = nil
 end
 
+function M.buildMessages(promptTpl, args, helpers)
+  if type(promptTpl) == 'string' then
+    promptTpl = { { role = 'user', content = promptTpl } }
+  end
+  local messages = {}
+  for _, message in ipairs(promptTpl) do
+    message = M.assign({}, message)
+    message['content'] = M.fill(message['content'], args, helpers)
+    table.insert(messages, message)
+  end
+  return messages
+end
+
 return M

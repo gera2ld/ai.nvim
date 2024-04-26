@@ -14,48 +14,53 @@ local function formatResult(data)
   if data['candidates'] then
     for i, candidate in ipairs(data['candidates']) do
       local text = util.get(candidate, { 'content', 'parts', 1, 'text' })
-      result = result .. '## Answer ' .. i .. '\n\n' .. text .. '\n'
+      result = result .. '### Answer ' .. i .. '\n\n' .. text .. '\n'
     end
   end
   return result
 end
 
-local function askGeminiCallback(res, ctx)
+local function askGeminiCallback(res, callback)
   local result
   if res.status ~= 200 then
-    if ctx.handleError ~= nil then
-      result = ctx.handleError(res.status, res.body)
-    else
-      result = 'Error: Gemini API responded with the status ' .. tostring(res.status) .. '\n\n' .. res.body
-    end
+    result = 'Error: Gemini API responded with the status ' .. tostring(res.status) .. '\n\n' .. res.body
   else
     local data = vim.fn.json_decode(res.body)
     result = formatResult(data)
-    if ctx.handleResult ~= nil then
-      result = ctx.handleResult(result)
-    end
   end
-  ctx.callback(result)
+  callback(result)
 end
 
-function M.precheck(opts)
-  assert(not util.isEmpty(opts.api_key), 'opts.gemini.api_key is required')
+function M.precheck(providerOpts)
+  if util.isEmpty(providerOpts.api_key) then
+    print('opts.gemini.api_key is required')
+    return false
+  end
+  return true
 end
 
-function M.request(prompt, opts, ctx)
+function M.request(messages, providerOpts, opts)
+  local contents = {}
+  for _, message in ipairs(messages) do
+    local item = {
+      parts = {
+        text = message.content,
+      },
+    }
+    if message.role == 'user' then
+      item.parts.role = 'user'
+    else
+      item.parts.role = 'model'
+    end
+    table.insert(contents, item)
+  end
   curl.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/' .. opts.model .. ':generateContent?key=' .. opts.api_key,
+    'https://generativelanguage.googleapis.com/v1beta/models/' .. opts.model .. ':generateContent?key=' .. providerOpts.api_key,
     {
       raw = { '-H', 'Content-type: application/json' },
-      proxy = opts.proxy,
+      proxy = providerOpts.proxy,
       body = vim.fn.json_encode({
-        contents = {
-          {
-            parts = {
-              text = prompt,
-            },
-          },
-        },
+        contents = contents,
         safetySettings = {
           { category = 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold = 'BLOCK_ONLY_HIGH' },
           { category = 'HARM_CATEGORY_HATE_SPEECH',       threshold = 'BLOCK_ONLY_HIGH' },
@@ -64,7 +69,7 @@ function M.request(prompt, opts, ctx)
         }
       }),
       callback = function(res)
-        vim.schedule(function() askGeminiCallback(res, ctx) end)
+        vim.schedule(function() askGeminiCallback(res, opts.callback) end)
       end
     })
 end
