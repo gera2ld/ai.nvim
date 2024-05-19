@@ -18,13 +18,13 @@ Using lazy.nvim:
   'gera2ld/ai.nvim',
   dependencies = 'nvim-lua/plenary.nvim',
   opts = {
-    -- AI's answer is displayed in a popup buffer
-    -- Default behaviour is not to give it the focus because it is seen as a kind of tooltip
-    -- But if you prefer it to get the focus, set to true.
+    ---- AI's answer is displayed in a popup buffer
+    ---- Default behaviour is not to give it the focus because it is seen as a kind of tooltip
+    ---- But if you prefer it to get the focus, set to true.
     result_popup_gets_focus = false,
-    -- Define custom prompts here, see below for more details
-    prompts = {},
-    -- Default models for each prompt, can be overridden in the prompt definition
+    ---- Override default prompts here, see below for more details
+    -- prompts = {},
+    ---- Default models for each prompt, can be overridden in the prompt definition
     models = {
       {
         provider = 'gemini',
@@ -38,7 +38,7 @@ Using lazy.nvim:
       },
     },
 
-    -- API keys and relavant config
+    --- API keys and relavant config
     gemini = {
       api_key = 'YOUR_GEMINI_API_KEY',
       -- model = 'gemini-pro',
@@ -71,20 +71,9 @@ export AI_NVIM_PROVIDER_CONFIG='{
   dependencies = 'nvim-lua/plenary.nvim',
   config = function ()
     local ai = require('ai')
-    ai.setup(
-      ai.util.assign(
-        {
-          prompts = util.assign({}, ai.default_prompts, {
-            -- override default prompts
-          }),
-          models = {
-            -- override the default models
-          },
-        },
-        -- API keys and relavant config stored in an environment variable
-        vim.fn.json_decode(os.getenv('AI_NVIM_PROVIDER_CONFIG'))
-      )
-    )
+    local ok, opts = pcall(vim.fn.json_decode, os.getenv('AI_NVIM_PROVIDER_CONFIG'))
+    opts = ok and opts or {}
+    ai.setup(opts)
   end,
   event = 'VeryLazy',
 },
@@ -142,20 +131,20 @@ export AI_NVIM_PROVIDER_CONFIG='{
 
 The prompts will be merged into built-in prompts. Here are the available fields for each prompt:
 
-| Fields          | Required | Description                                                                                      |
-| --------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `command`       | No       | If defined, a user command will be created for this prompt.                                      |
-| `loading_tpl`   | No       | Template for content shown when communicating with Gemini. See below for available placeholders. |
-| `prompt_tpl`    | Yes      | Template for the prompt string passed to Gemini. See below for available placeholders.           |
-| `result_tpl`    | No       | Template for the result shown in the popup. See below for available placeholders.                |
-| `require_input` | No       | If set to `true`, the prompt will only be sent if text is selected or passed to the command.     |
+| Fields          | Required | Description                                                                                  |
+| --------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `command`       | No       | If defined, a user command will be created for this prompt.                                  |
+| `loading_tpl`   | No       | Template for content shown when communicating with AI. See below for available placeholders. |
+| `prompt_tpl`    | Yes      | Template for the prompt string passed to AI. See below for available placeholders.           |
+| `result_tpl`    | No       | Template for the result shown in the popup. See below for available placeholders.            |
+| `require_input` | No       | If set to `true`, the prompt will only be sent if text is selected or passed to the command. |
 
 Placeholders can be used in templates. If not available, it will be left as is.
 
-| Placeholders           | Description                                 | Availability      |
-| ---------------------- | ------------------------------------------- | ----------------- |
-| `{{input}}`            | The text selected or passed to the command. | Always            |
-| `{{output}}`           | The result returned by Gemini.              | After the request |
+| Placeholders | Description                                 | Availability      |
+| ------------ | ------------------------------------------- | ----------------- |
+| `{{input}}`  | The text selected or passed to the command. | Always            |
+| `{{output}}` | The result returned by AI.                  | After the request |
 
 Placeholders can be used along with helpers to transform the values, in the form of `{{ input |> helper1 |> helper2 }}`. For example, `{{ input |> json_encode }}` will be replaced with `json_encode(input)`.
 
@@ -179,4 +168,4 @@ or with its name:
 
 ## Related Projects
 
-- [coc-ai](https://github.com/gera2ld/coc-ai) - A coc.nvim plugin powered by Gemini
+- [coc-ai](https://github.com/gera2ld/coc-ai) - A coc.nvim plugin powered by AI
