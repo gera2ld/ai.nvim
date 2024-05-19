@@ -48,9 +48,9 @@ function M.request(messages, providerOpts, opts)
       },
     }
     if message.role == 'user' then
-      item.parts.role = 'user'
+      item.role = 'user'
     else
-      item.parts.role = 'model'
+      item.role = 'model'
     end
     table.insert(contents, item)
   end
