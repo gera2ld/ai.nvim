@@ -166,6 +166,13 @@ or with its name:
 :lua require('ai').handle('rock')
 ```
 
+### Custom Keymaps
+
+```lua
+-- Add a keymap to enter the popup
+vim.keymap.set('n', '<enter>', require('ai.util').enterPopup)
+```
+
 ## Related Projects
 
 - [coc-ai](https://github.com/gera2ld/coc-ai) - A coc.nvim plugin powered by AI

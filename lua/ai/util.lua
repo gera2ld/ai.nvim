@@ -143,19 +143,34 @@ function M.createPopup(initialContent, opts)
     col = 0,
   })
   vim.api.nvim_buf_set_option(bufnr, 'filetype', 'markdown')
+  vim.keymap.set('n', 'q', M.closePopup, { buffer = bufnr })
   update(initialContent)
   if opts.result_popup_gets_focus then
-    vim.api.nvim_set_current_win(win_id)
+    M.enterPopup()
   end
   return update
 end
 
+function M.enterPopup()
+  if win_id == nil then
+    return
+  end
+  vim.api.nvim_set_current_win(win_id)
+end
+
 function M.closePopup()
-  if win_id == nil or win_id == vim.api.nvim_get_current_win() then
+  if win_id == nil then
     return
   end
   pcall(vim.api.nvim_win_close, win_id, true)
   win_id = nil
+end
+
+function M.closePopupIfNotFocused()
+  if win_id == vim.api.nvim_get_current_win() then
+    return
+  end
+  M.closePopup()
 end
 
 function M.buildMessages(promptTpl, args, helpers)

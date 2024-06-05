@@ -125,7 +125,7 @@ function M.setup(opts)
 end
 
 vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-  callback = util.closePopup,
+  callback = util.closePopupIfNotFocused,
 })
 
 return M
