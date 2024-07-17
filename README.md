@@ -120,7 +120,7 @@ export AI_NVIM_PROVIDER_CONFIG='{
       models = {
         {
           provider = 'gemini',
-          model = 'gemini-pro',
+          model = 'gemini-1.5-pro',
           result_tpl = '## Joke from Gemini\n\n{{output}}',
         },
       },

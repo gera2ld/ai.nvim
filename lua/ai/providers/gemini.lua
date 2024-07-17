@@ -40,6 +40,7 @@ function M.precheck(providerOpts)
 end
 
 function M.request(messages, providerOpts, opts)
+  local system
   local contents = {}
   for _, message in ipairs(messages) do
     local item = {
@@ -47,19 +48,25 @@ function M.request(messages, providerOpts, opts)
         text = message.content,
       },
     }
-    if message.role == 'user' then
-      item.role = 'user'
+    if message.role == 'system' and not system then
+      system = item
     else
-      item.role = 'model'
+      if message.role == 'user' then
+        item.role = 'user'
+      else
+        item.role = 'model'
+      end
+      table.insert(contents, item)
     end
-    table.insert(contents, item)
   end
   curl.post(
-    'https://generativelanguage.googleapis.com/v1beta/models/' .. opts.model .. ':generateContent?key=' .. providerOpts.api_key,
+    'https://generativelanguage.googleapis.com/v1beta/models/' ..
+    opts.model .. ':generateContent?key=' .. providerOpts.api_key,
     {
       raw = { '-H', 'Content-type: application/json' },
       proxy = providerOpts.proxy,
       body = vim.fn.json_encode({
+        system_instruction = system,
         contents = contents,
         safetySettings = {
           { category = 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold = 'BLOCK_ONLY_HIGH' },
